@@ -4,10 +4,8 @@ import (
 	"embed"
 	"fmt"
 	"log"
-	"os"
-	"time"
 
-	backend "github.com/xob0t/go-out-backend"
+	"github.com/xob0t/go-out-backend"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
@@ -18,8 +16,9 @@ import (
 // made available to the frontend.
 // See https://pkg.go.dev/embed for more information.
 
-var stringEdited = "-edited"
+var editedSuffix = "-edited"
 var processEdited = true
+var ignoreMinorErrors = false
 
 //go:embed frontend/dist
 var assets embed.FS
@@ -67,34 +66,7 @@ func main() {
 
 	window.RegisterHook(events.Common.WindowRuntimeReady, func(e *application.WindowEvent) {
 		app.Logger.Info("WindowRuntimeReady")
-
-		userSettingsDirExists := Exists(UserSettingsDir)
-		if !userSettingsDirExists {
-			app.Logger.Info("Created a new user settings dir")
-			os.MkdirAll(UserSettingsDir, os.ModePerm)
-		}
-
-		configExists := Exists(GlobalSettingsPath)
-		if !configExists {
-			app.Logger.Info("Created a new user settings config")
-			MakeNewDefaultConfig()
-		}
-		file, _ := os.ReadFile(GlobalSettingsPath)
-		if len(file) == 0 {
-			app.Logger.Info("config file is empty")
-			MakeNewDefaultConfig()
-		}
-
-		GlobalSettingsConfig, _ = ParseGlobalConfig()
-
-		if GlobalSettingsConfig.Window.IsMaximised {
-			window.Maximise()
-			return
-		}
-		if GlobalSettingsConfig.Window.Saved {
-			window.SetSize(GlobalSettingsConfig.Window.SizeW, GlobalSettingsConfig.Window.SizeH)
-			window.SetPosition(GlobalSettingsConfig.Window.PosX, GlobalSettingsConfig.Window.PosY)
-		}
+		RestoreSettings(app, window)
 	})
 
 	window.On(events.Common.WindowDidMove, func(event *application.WindowEvent) {
@@ -102,7 +74,7 @@ func main() {
 		GlobalSettingsConfig.Window.SizeW, GlobalSettingsConfig.Window.SizeH = window.Size()
 		GlobalSettingsConfig.Window.PosX, GlobalSettingsConfig.Window.PosY = window.Position()
 		GlobalSettingsConfig.Window.Saved = true
-		app.Logger.Info("window resized!")
+		// app.Logger.Info("window resized!")
 		SaveGlobalConfig()
 	})
 
@@ -112,31 +84,32 @@ func main() {
 			Name: "files",
 			Data: files,
 		})
-		app.Logger.Info("Path Dropped!", "files", files)
-		file, _ := os.Open(files[0])
-		fileInfo, _ := file.Stat()
-		if fileInfo.IsDir() {
-			files, _ := backend.GetAllFiles(files[0])
-			app.Logger.Info("Path is a dir!", "files", files)
-			backend.UpdateGeoData(app, files, stringEdited, processEdited)
-		} else {
-			app.Logger.Warn("Path is a file! Has to be a dir!")
-
-		}
-	})
-
-	// Create a goroutine that emits an event containing the current time every second.
-	// The frontend can listen to this event and update the UI accordingly.
-	go func() {
-		for {
-			now := time.Now().Format(time.RFC1123)
+		app.Logger.Info("Files Dropped!", "files", files)
+		jsonFiles, err := backend.GetAllJsonFiles(files)
+		if err != nil {
+			errMsg := "Failed to scan input path(s)"
+			app.Logger.Warn(errMsg)
 			app.Events.Emit(&application.WailsEvent{
-				Name: "time",
-				Data: now,
+				Name: "log",
+				Data: map[string]string{
+					"level":   "error",
+					"message": errMsg,
+				},
 			})
-			time.Sleep(time.Second)
+			return
 		}
-	}()
+		app.Logger.Info("JSONs found!", "jsons", jsonFiles)
+		backend.UpdateMetadata(app, jsonFiles, editedSuffix, processEdited, ignoreMinorErrors)
+		logMsg := "The process is complete, click this log to expand it"
+		app.Events.Emit(&application.WailsEvent{
+			Name: "log",
+			Data: map[string]string{
+				"level":   "INFO",
+				"message": logMsg,
+			},
+		})
+
+	})
 
 	// Run the application. This blocks until the application has been exited.
 	err := app.Run()

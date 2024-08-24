@@ -2,21 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <link rel="icon" type="image/svg+xml" href="/wails.png"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/style.css"/>
     <title>go-out</title>
 </head>
 <body>
 <div class="container">
-    <h1>GO-OUT</h1>
     <div class="card">
-        <h2>Google Photo Takeout metadata processor, built with Go, Wails and exiftool</h2>
+        <div class="result" id="result">DROP UNZIPPED GOOGLE PHOTOS TAKEOUT FILES HERE TO MERGE JSON METADATA INTO MEDIA</div>
     </div>
-    <div class="card">
-        <div class="result" id="result">Drop A Google Photo Takeout Folder To Process Media</div>
+    <div id="logContainer">
+        <button id="toggleLogVisibility">Hide Log</button>
+        <button id="clearLog">Clear Log</button>
+        <button id="copyLog">Copy Log</button>
+        <div id="logArea"></div>
     </div>
-    <div id="logArea"></div>
 </div>
 <script type="module" src="/main.js"></script>
 </body>
