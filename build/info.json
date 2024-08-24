@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.1.1"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.1.1",
+			"CompanyName": "xob0t",
+			"FileDescription": "Merge Google Photos json metadata into media files",
+			"LegalCopyright": "MIT",
+			"ProductName": "go-out",
+			"Comments": "Have Fun!"
+		}
+	}
+}
