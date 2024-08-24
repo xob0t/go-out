@@ -118,7 +118,7 @@ func main() {
 		if fileInfo.IsDir() {
 			files, _ := backend.GetAllFiles(files[0])
 			app.Logger.Info("Path is a dir!", "files", files)
-			backend.UpdateGeoData(files, stringEdited, processEdited)
+			backend.UpdateGeoData(app, files, stringEdited, processEdited)
 		} else {
 			app.Logger.Warn("Path is a file! Has to be a dir!")
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/barasher/go-exiftool"
 	"github.com/tidwall/gjson"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 func GetAllFiles(root string) ([]string, error) {
@@ -47,8 +48,17 @@ type PhotoMetadata struct {
 }
 
 // updateGeoData updates the geo data for the image files based on the JSON metadata.
-func UpdateGeoData(filePaths []string, stringEdited string, processEdited bool) {
+func UpdateGeoData(app *application.App, filePaths []string, stringEdited string, processEdited bool) {
 	// Create a map to group JSON files and their corresponding image files.
+
+	app.Events.Emit(&application.WailsEvent{
+		Name: "log",
+		Data: map[string]string{
+			"level":   "info",
+			"message": "HELLO FROM BACKEND!",
+		},
+	})
+
 	fileMap := make(map[string][]string)
 
 	for _, filePath := range filePaths {
