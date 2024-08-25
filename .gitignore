@@ -2,3 +2,4 @@
 /bin
 .task/checksum/build-frontend
 /.task
+/frontend/dist
