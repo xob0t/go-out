@@ -1,4 +1,4 @@
-package main
+package backend
 
 import (
 	_ "embed"
@@ -30,9 +30,6 @@ type GlobalSettins struct {
 	} `json:"window" koanf:"window"`
 }
 
-//go:embed build/info.json
-var WailsInfoJSON string
-
 func RestoreSettings(app *application.App, window *application.WebviewWindow) {
 	userSettingsDirExists := Exists(UserSettingsDir)
 	if !userSettingsDirExists {
@@ -60,7 +57,7 @@ func RestoreSettings(app *application.App, window *application.WebviewWindow) {
 	}
 }
 
-func GetAppVersion() string {
+func GetAppVersion(WailsInfoJSON string) string {
 	return gjson.Get(WailsInfoJSON, "info.0000.ProductVersion").String()
 }
 

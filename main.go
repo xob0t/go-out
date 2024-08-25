@@ -20,9 +20,12 @@ var editedSuffix = "-edited"
 var processEdited = true
 var ignoreMinorErrors = false
 
+//go:embed build/info.json
+var WailsInfoJSON string
+
 //go:embed frontend/dist
 var assets embed.FS
-var title = fmt.Sprintf("go-out v" + GetAppVersion())
+var title = fmt.Sprintf("go-out v" + backend.GetAppVersion(WailsInfoJSON))
 
 // main function serves as the application's entry point. It initializes the application, creates a window,
 // It subsequently runs the application and logs any error that might occur.
@@ -66,16 +69,16 @@ func main() {
 
 	window.RegisterHook(events.Common.WindowRuntimeReady, func(e *application.WindowEvent) {
 		app.Logger.Info("WindowRuntimeReady")
-		RestoreSettings(app, window)
+		backend.RestoreSettings(app, window)
 	})
 
 	window.On(events.Common.WindowDidMove, func(event *application.WindowEvent) {
-		GlobalSettingsConfig.Window.IsMaximised = window.IsMaximised()
-		GlobalSettingsConfig.Window.SizeW, GlobalSettingsConfig.Window.SizeH = window.Size()
-		GlobalSettingsConfig.Window.PosX, GlobalSettingsConfig.Window.PosY = window.Position()
-		GlobalSettingsConfig.Window.Saved = true
+		backend.GlobalSettingsConfig.Window.IsMaximised = window.IsMaximised()
+		backend.GlobalSettingsConfig.Window.SizeW, backend.GlobalSettingsConfig.Window.SizeH = window.Size()
+		backend.GlobalSettingsConfig.Window.PosX, backend.GlobalSettingsConfig.Window.PosY = window.Position()
+		backend.GlobalSettingsConfig.Window.Saved = true
 		// app.Logger.Info("window resized!")
-		SaveGlobalConfig()
+		backend.SaveGlobalConfig()
 	})
 
 	window.On(events.Common.WindowFilesDropped, func(event *application.WindowEvent) {
