@@ -29,7 +29,7 @@ So, if you’ve updated metadata in Google Photos and want those changes written
 Most popular image and video formats are.
 Compatibility is reliant on exiftool, you can see the full list here https://exiftool.org/#supported
 
-#### Where config is stored?
+#### Where is the config stored?
 
 The config file is stored in `%userprofile%\.config\go-out\config.yaml`
 It is used to store app's settings and window position
