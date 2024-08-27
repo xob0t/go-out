@@ -68,4 +68,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/barasher/go-exiftool => github.com/xob0t/go-exiftool v1.10.1
+replace github.com/barasher/go-exiftool => github.com/xob0t/go-exiftool v1.10.2
