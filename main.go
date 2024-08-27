@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/xob0t/go-out-backend"
+	backend "github.com/xob0t/go-out-backend"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
@@ -15,10 +15,6 @@ import (
 // Any files in the frontend/dist folder will be embedded into the binary and
 // made available to the frontend.
 // See https://pkg.go.dev/embed for more information.
-
-var editedSuffix = "-edited"
-var processEdited = true
-var ignoreMinorErrors = false
 
 //go:embed build/info.json
 var WailsInfoJSON string
@@ -41,6 +37,9 @@ func main() {
 		Description: "Merge Google Photos json metadata into media files",
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
+		},
+		Services: []application.Service{
+			application.NewService(&SettingsService{}),
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
@@ -72,11 +71,16 @@ func main() {
 		backend.RestoreSettings(app, window)
 	})
 
+	app.Events.On("mergeSettingsChanged", func(e *application.WailsEvent) {
+		app.Logger.Info("mergeSettingsChanged")
+		app.Logger.Info("[Go] WailsEvent received", "name", e.Name, "data", e.Data, "sender", e.Sender, "cancelled", e.Cancelled)
+	})
+
 	window.On(events.Common.WindowDidMove, func(event *application.WindowEvent) {
-		backend.GlobalSettingsConfig.Window.IsMaximised = window.IsMaximised()
-		backend.GlobalSettingsConfig.Window.SizeW, backend.GlobalSettingsConfig.Window.SizeH = window.Size()
-		backend.GlobalSettingsConfig.Window.PosX, backend.GlobalSettingsConfig.Window.PosY = window.Position()
-		backend.GlobalSettingsConfig.Window.Saved = true
+		backend.GlobalSettings.Window.IsMaximised = window.IsMaximised()
+		backend.GlobalSettings.Window.SizeW, backend.GlobalSettings.Window.SizeH = window.Size()
+		backend.GlobalSettings.Window.PosX, backend.GlobalSettings.Window.PosY = window.Position()
+		backend.GlobalSettings.Window.Saved = true
 		// app.Logger.Info("window resized!")
 		backend.SaveGlobalConfig()
 	})
@@ -101,8 +105,19 @@ func main() {
 			})
 			return
 		}
+		if len(jsonFiles) == 0 {
+			app.Logger.Info("No JSONs found")
+			app.Events.Emit(&application.WailsEvent{
+				Name: "log",
+				Data: map[string]string{
+					"level":   "INFO",
+					"message": "No JSONs found",
+				},
+			})
+			return
+		}
 		app.Logger.Info("JSONs found!", "jsons", jsonFiles)
-		backend.UpdateMetadata(app, jsonFiles, editedSuffix, processEdited, ignoreMinorErrors)
+		backend.UpdateMetadata(app, jsonFiles, backend.GlobalSettings.MergeSettings)
 		logMsg := "The process is complete, click this log to expand it"
 		app.Events.Emit(&application.WailsEvent{
 			Name: "log",

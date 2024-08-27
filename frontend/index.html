@@ -9,7 +9,51 @@
   <body>
     <div class="container">
       <div class="card">
-        <div class="result" id="result">DROP UNZIPPED GOOGLE PHOTOS TAKEOUT FILES HERE TO MERGE JSON METADATA INTO MEDIA</div>
+        <div class="title" id="title">DROP UNZIPPED GOOGLE PHOTOS TAKEOUT FILES TO MERGE JSON METADATA INTO MEDIA</div>
+      </div>
+      <div class="settings-container">
+        <div>
+          <h3>Settings</h3>
+          <label>
+            Edited Suffix
+            <input type="text" id="editedSuffix" />
+          </label>
+          <label>
+            Ignore Minor Exiftool Write Errors
+            <input type="checkbox" id="ignoreMinorErrors" />
+          </label>
+          <label>
+            Timezone Offset
+            <input type="text" id="timezoneOffset" />
+          </label>
+          <label>
+            Infer Timezone From GPS Whenever Possible
+            <input type="checkbox" id="inferTimezoneFromGPS" />
+          </label>
+        </div>
+        <div>
+          <h3>EXIF Tags</h3>
+          <label>
+            Title
+            <input type="checkbox" id="mergeTitle" />
+          </label>
+          <label>
+            Description 
+            <input type="checkbox" id="mergeDescription" />
+          </label>
+          <label>
+            Date Taken
+            <input type="checkbox" id="mergeDateTaken" />
+          </label>
+          <label>
+            URL
+            <input type="checkbox" id="mergeURL" />
+          </label>
+          <label>
+            GPS
+            <input type="checkbox" id="mergeGPS" />
+          </label>
+        </div>
       </div>
       <div id="logContainer">
         <button id="toggleLogVisibility">Hide Log</button>

@@ -1,12 +1,15 @@
 package backend
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/barasher/go-exiftool"
+	"github.com/bradfitz/latlong"
 	"github.com/tidwall/gjson"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -46,9 +49,46 @@ func GetAllJsonFiles(paths []string) ([]string, error) {
 	return jsons, nil
 }
 
-// UpdateMetadata updates the geo data for the image files based on the JSON metadata.
-func UpdateMetadata(app *application.App, jsonPaths []string, editedSuffix string, processEdited bool, ignoreMinorErrors bool) {
-	// Create a map to group JSON files and their corresponding image files.
+func ApplyTimezoneOffset(t time.Time, offset string) time.Time {
+	// Parse the offset
+	offset = strings.TrimPrefix(offset, "+")
+	offset = strings.TrimPrefix(offset, "-")
+	hours, _ := strconv.Atoi(offset[:2])
+	minutes, _ := strconv.Atoi(offset[2:])
+	if strings.HasPrefix(offset, "-") {
+		hours = -hours
+		minutes = -minutes
+	}
+
+	// Create a fixed zone with the parsed offset
+	location := time.FixedZone("Custom", hours*3600+minutes*60)
+
+	// Apply the timezone offset to the time
+	return t.In(location)
+}
+
+func getTimeInTimezone(t time.Time, lat, lon float64) (time.Time, error) {
+	// Get timezone name from coordinates
+	tz := latlong.LookupZoneName(lat, lon)
+	if tz == "" {
+		return time.Time{}, fmt.Errorf("unable to determine timezone for coordinates: %f, %f", lat, lon)
+	}
+
+	// Load the timezone location
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error loading timezone location: %v", err)
+	}
+
+	// Convert UTC time to the specified location's time
+	localTime := t.In(loc)
+
+	return localTime, nil
+}
+
+// UpdateMetadata updates file exif data based on the JSON metadata.
+func UpdateMetadata(app *application.App, jsonPaths []string, mergeSettings MergeSettings) {
+	// Create a map to group JSON files and their corresponding files.
 	fileMap := make(map[string][]string)
 
 	for _, jsonPath := range jsonPaths {
@@ -56,7 +96,7 @@ func UpdateMetadata(app *application.App, jsonPaths []string, editedSuffix strin
 		mediaPath := strings.TrimSuffix(jsonPath, ".json")
 		mediaExt := filepath.Ext(mediaPath)
 		mediaPathNoExt := strings.TrimSuffix(mediaPath, mediaExt)
-		editedName := mediaPathNoExt + editedSuffix + mediaExt
+		editedName := mediaPathNoExt + "-" + mergeSettings.EditedSuffix + mediaExt
 
 		// Check if the original media file exists.
 		if _, err := os.Stat(mediaPath); err == nil {
@@ -64,10 +104,8 @@ func UpdateMetadata(app *application.App, jsonPaths []string, editedSuffix strin
 		}
 
 		// If processEdited is true, check if the edited version exists.
-		if processEdited {
-			if _, err := os.Stat(editedName); err == nil {
-				fileMap[jsonPath] = append(fileMap[jsonPath], editedName)
-			}
+		if _, err := os.Stat(editedName); err == nil {
+			fileMap[jsonPath] = append(fileMap[jsonPath], editedName)
 		}
 	}
 
@@ -75,7 +113,7 @@ func UpdateMetadata(app *application.App, jsonPaths []string, editedSuffix strin
 	var configFuncs []func(*exiftool.Exiftool) error
 
 	// Add IgnoreMinorErrors function if required
-	if ignoreMinorErrors {
+	if mergeSettings.IgnoreMinorErrors {
 		configFuncs = append(configFuncs, exiftool.IgnoreMinorErrors())
 	}
 
@@ -94,8 +132,8 @@ func UpdateMetadata(app *application.App, jsonPaths []string, editedSuffix strin
 	}
 	defer et.Close()
 
-	// Process each JSON and image pair
-	for jsonPath, imagePaths := range fileMap {
+	// Process each JSON and file pair
+	for jsonPath, filePaths := range fileMap {
 		// Read the JSON file
 		data, err := os.ReadFile(jsonPath)
 		if err != nil {
@@ -120,41 +158,56 @@ func UpdateMetadata(app *application.App, jsonPaths []string, editedSuffix strin
 		longitude := gjson.GetBytes(data, "geoData.longitude").Float()
 		altitude := gjson.GetBytes(data, "geoData.altitude").Float()
 
-		t := time.Unix(photoTakenTime, 0).UTC()
-		// Format the time as "YYYY:MM:DD HH:MM:SS"
-		formattedTime := t.Format("2006:01:02 15:04:05")
-
-		// Prepare the fields for GPS metadata for each corresponding image
-		for _, imagePath := range imagePaths {
+		// Prepare the fields for exif metadata for each corresponding file
+		for _, filePath := range filePaths {
 			fileMetadataSlice := []exiftool.FileMetadata{
 				{
-					File: imagePath,
-					Fields: map[string]interface{}{
-						"Title":            title,
-						"URL":              url,
-						"DateTimeOriginal": formattedTime,
-						"ImageDescription": description,
-					},
+					File:   filePath,
+					Fields: map[string]interface{}{},
 				},
 			}
+			if mergeSettings.MergeTitle {
+				fileMetadataSlice[0].Fields["Title"] = title
+			}
+			if mergeSettings.MergeURL {
+				fileMetadataSlice[0].Fields["URL"] = url
+			}
+			if mergeSettings.MergeDateTaken {
+				t := time.Unix(photoTakenTime, 0).UTC()
+				if latitude > 0 && longitude > 0 && mergeSettings.InferTimezoneFromGPS {
+					t, err = getTimeInTimezone(t, latitude, longitude)
+					if err != nil {
+						app.Logger.Error(err.Error())
+					}
+				} else {
+					t = ApplyTimezoneOffset(t, mergeSettings.TimezoneOffset)
+				}
+				// Format the time as "YYYY:MM:DD HH:MM:SS"
+				formattedTime := t.Format("2006:01:02 15:04:05")
+				fileMetadataSlice[0].Fields["DateTimeOriginal"] = formattedTime
+			}
+			if mergeSettings.MergeDescription {
+				fileMetadataSlice[0].Fields["ImageDescription"] = description
+			}
 
-			// Add GPS data if present
-			if latitude != 0 {
-				fileMetadataSlice[0].Fields["GPSLatitude"] = latitude
-			}
-			if longitude != 0 {
-				fileMetadataSlice[0].Fields["GPSLongitude"] = longitude
-			}
-			if altitude != 0 {
-				fileMetadataSlice[0].Fields["GPSAltitude"] = altitude
+			if mergeSettings.MergeGPS {
+				if latitude != 0 {
+					fileMetadataSlice[0].Fields["GPSLatitude"] = latitude
+				}
+				if longitude != 0 {
+					fileMetadataSlice[0].Fields["GPSLongitude"] = longitude
+				}
+				if altitude != 0 {
+					fileMetadataSlice[0].Fields["GPSAltitude"] = altitude
+				}
 			}
 
-			// Write the metadata to the image
+			// Write the metadata to the file
 			et.WriteMetadata(fileMetadataSlice)
 
 			// Check if there were any errors
 			if fileMetadataSlice[0].Err != nil {
-				errMsg := "Error writing data to image " + imagePath + ": " + fileMetadataSlice[0].Err.Error()
+				errMsg := "Error writing data to file " + filePath + ": " + fileMetadataSlice[0].Err.Error()
 				app.Events.Emit(&application.WailsEvent{
 					Name: "log",
 					Data: map[string]string{
@@ -166,7 +219,7 @@ func UpdateMetadata(app *application.App, jsonPaths []string, editedSuffix strin
 				continue
 			}
 
-			logMsg := "Successfully updated EXIF data for image: " + imagePath
+			logMsg := "Successfully updated EXIF data for file: " + filePath
 			app.Events.Emit(&application.WailsEvent{
 				Name: "log",
 				Data: map[string]string{

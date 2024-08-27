@@ -16,51 +16,10 @@
 }
 
 body {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-
-#logContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-#logArea {
-  user-select: text;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  cursor: pointer;
-}
-
-#toggleLogVisibility,
-#clearLog,
-#copyLog {
-  display: none;
-}
-
-.log-entry.ERROR{
-    color: red;
-}
-
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400;
-  src: local(""), url("./Inter-Medium.ttf") format("truetype");
-}
-
-button {
-  line-height: 30px;
-  border-radius: 3px;
-  border: none;
-  cursor: pointer;
-}
-
-body {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   margin: 0;
   display: flex;
   place-items: center;
@@ -69,20 +28,21 @@ body {
   min-height: 100vh;
 }
 
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+button {
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+  background-color: #444;
+  width: 100px;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  src: local(""), url("./RobotoSlab-VariableFont_wght.ttf") format("truetype");
 }
 
 #app {
-  max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
@@ -101,4 +61,83 @@ h1 {
   button {
     background-color: #f9f9f9;
   }
+}
+
+#logContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#logContainer button {
+  align-self: center;
+}
+
+#logArea {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  cursor: pointer;
+  font-family: monospace;
+}
+
+#toggleLogVisibility,
+#clearLog,
+#copyLog {
+  display: none;
+}
+
+.log-entry.ERROR {
+  color: red;
+}
+
+#title {
+  margin-bottom: 30px;
+  font-size: 1.2em;
+  line-height: 1.1;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-container {
+  display: flex;
+  gap: 40px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 1px solid #111;
+  margin: 20px;
+  padding: 20px;
+  font-weight: bold;
+  background-color: rgba(27, 38, 54, 1);
+  color: white;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+input[type="text"],
+input[type="checkbox"] {
+  margin-left: 1rem;
+}
+
+input[type="text"] {
+  padding: 0.5rem;
+  border: 1px solid black;
+  border-radius: 4px;
+}
+
+input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
 }

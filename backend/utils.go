@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/tidwall/gjson"
 
@@ -15,12 +17,25 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-var GlobalSettingsConfig GlobalSettins
-var UserSettingsDir string = GetUserDir() + "/.config/go-out"
-var GlobalSettingsPath string = GetUserDir() + "/.config/go-out/config.yaml"
+var GlobalSettings GlobalSettingsT
+var ConfigDir string = filepath.Join(GetUserDir(), "/.config/go-out")
+var ConfigPath string = filepath.Join(ConfigDir, "config.yaml")
 
-type GlobalSettins struct {
-	Window struct {
+type MergeSettings struct {
+	IgnoreMinorErrors    bool   `json:"ignoreMinorErrors" koanf:"ignore_minor_errors"`
+	EditedSuffix         string `json:"editedSuffix" koanf:"edited_suffix"`
+	TimezoneOffset       string `json:"timezoneOffset" koanf:"timezone_offset"`
+	InferTimezoneFromGPS bool   `json:"inferTimezoneFromGPS" koanf:"defer_timezone_from_GPS"`
+	MergeTitle           bool   `json:"mergeTitle" koanf:"merge_title"`
+	MergeDescription     bool   `json:"mergeDescription" koanf:"merge_description"`
+	MergeDateTaken       bool   `json:"mergeDateTaken" koanf:"merge_date_taken"`
+	MergeURL             bool   `json:"mergeURL" koanf:"merge_URL"`
+	MergeGPS             bool   `json:"mergeGPS" koanf:"merge_GPS"`
+}
+
+type GlobalSettingsT struct {
+	MergeSettings MergeSettings `json:"mergeSettings" koanf:"merge_settings"`
+	Window        struct {
 		Saved       bool `json:"saved" koanf:"saved"`
 		IsMaximised bool `json:"isMaximised" koanf:"is_maximised"`
 		SizeW       int  `json:"sizeW" koanf:"size_w"`
@@ -31,29 +46,25 @@ type GlobalSettins struct {
 }
 
 func RestoreSettings(app *application.App, window *application.WebviewWindow) {
-	userSettingsDirExists := Exists(UserSettingsDir)
-	if !userSettingsDirExists {
-		app.Logger.Info("Created a new user settings dir")
-		os.MkdirAll(UserSettingsDir, os.ModePerm)
+	ConfigDirExists := Exists(ConfigDir)
+	if !ConfigDirExists {
+		app.Logger.Info("Created a new user config dir")
+		os.MkdirAll(ConfigDir, os.ModePerm)
 	}
-	configExists := Exists(GlobalSettingsPath)
-	if !configExists {
-		app.Logger.Info("Created a new user settings config")
+	configExists := Exists(ConfigPath)
+	file, _ := os.ReadFile(ConfigPath)
+	if len(file) == 0 || !configExists {
+		app.Logger.Info("config not found")
 		MakeNewDefaultConfig()
 	}
-	file, _ := os.ReadFile(GlobalSettingsPath)
-	if len(file) == 0 {
-		app.Logger.Info("config file is empty")
-		MakeNewDefaultConfig()
-	}
-	GlobalSettingsConfig, _ = ParseGlobalConfig()
-	if GlobalSettingsConfig.Window.IsMaximised {
+	GlobalSettings, _ = ParseGlobalConfig()
+	if GlobalSettings.Window.IsMaximised {
 		window.Maximise()
 		return
 	}
-	if GlobalSettingsConfig.Window.Saved {
-		window.SetSize(GlobalSettingsConfig.Window.SizeW, GlobalSettingsConfig.Window.SizeH)
-		window.SetPosition(GlobalSettingsConfig.Window.PosX, GlobalSettingsConfig.Window.PosY)
+	if GlobalSettings.Window.Saved {
+		window.SetSize(GlobalSettings.Window.SizeW, GlobalSettings.Window.SizeH)
+		window.SetPosition(GlobalSettings.Window.PosX, GlobalSettings.Window.PosY)
 	}
 }
 
@@ -69,24 +80,33 @@ func GetUserDir() string {
 	return dirname
 }
 
-func ParseGlobalConfig() (GlobalSettins, error) {
-	var c GlobalSettins
+func ParseGlobalConfig() (GlobalSettingsT, error) {
+	var c GlobalSettingsT
 	var k = koanf.New(".")
-	if err := k.Load(file.Provider(GlobalSettingsPath), yaml.Parser()); err != nil {
+	if err := k.Load(file.Provider(ConfigPath), yaml.Parser()); err != nil {
 		log.Printf("error loading global config: %v", err)
-		return GlobalSettins{}, err
+		return GlobalSettingsT{}, err
 	}
 	err := k.Unmarshal("", &c)
 	if err != nil {
 		log.Printf("error Unmarshaling global config: %v", err)
-		return GlobalSettins{}, err
+		return GlobalSettingsT{}, err
 	}
 
 	return c, nil
 }
 
 func MakeNewDefaultConfig() error {
-	GlobalSettingsConfig = GlobalSettins{}
+	GlobalSettings = GlobalSettingsT{}
+	GlobalSettings.MergeSettings.EditedSuffix = "edited"
+	GlobalSettings.MergeSettings.InferTimezoneFromGPS = true
+	GlobalSettings.MergeSettings.MergeTitle = true
+	GlobalSettings.MergeSettings.MergeDescription = true
+	GlobalSettings.MergeSettings.MergeDateTaken = true
+	GlobalSettings.MergeSettings.MergeURL = true
+	GlobalSettings.MergeSettings.MergeGPS = true
+	GlobalSettings.MergeSettings.TimezoneOffset = time.Now().Format("-0700")
+	fmt.Println(GlobalSettings)
 	err := SaveGlobalConfig()
 	if err != nil {
 		fmt.Println(err)
@@ -109,7 +129,7 @@ func Exists(path string) bool {
 func SaveGlobalConfig() error {
 	k := koanf.New(".")
 
-	err := k.Load(structs.Provider(GlobalSettingsConfig, "koanf"), nil)
+	err := k.Load(structs.Provider(GlobalSettings, "koanf"), nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -120,7 +140,7 @@ func SaveGlobalConfig() error {
 		return err
 	}
 
-	err = os.WriteFile(GlobalSettingsPath, b, os.ModePerm)
+	err = os.WriteFile(ConfigPath, b, os.ModePerm)
 
 	if err != nil {
 		fmt.Println(err)
