@@ -2,7 +2,7 @@
 
 Ensure that [ExifTool by Phil Harvey](https://exiftool.org/) is available in your PATH or the current working directory.
 
-The output of Takeout is influenced by the language settings of the Takeout page. This tool works best with English output.  
+The output of Takeout is influenced by the language settings of the Takeout page. Currently, this tool works best with English output.  
 To generate a Takeout export in English, use the following link:  
 https://takeout.google.com/settings/takeout/custom/photos?hl=en
 
