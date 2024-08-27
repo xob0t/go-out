@@ -1,5 +1,7 @@
 ## go-out
 
+![](readme-assets\screen.jpg)
+
 Ensure that [ExifTool by Phil Harvey](https://exiftool.org/) is available in your PATH or the current working directory.
 
 The output of Takeout is influenced by the language settings of the Takeout page. Currently, this tool works best with English output.  
