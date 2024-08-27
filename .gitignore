@@ -3,3 +3,4 @@
 .task/checksum/build-frontend
 /.task
 /frontend/dist
+wails.syso
