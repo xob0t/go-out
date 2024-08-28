@@ -109,6 +109,17 @@ func getTimeInTimezone(t time.Time, lat, lon float64) (time.Time, error) {
 	return localTime, nil
 }
 
+func updateTag(tagName string, newValue interface{}, original exiftool.FileMetadata, fileMetadataSlice *[]exiftool.FileMetadata, overwrite bool) {
+	extractedTag := ""
+	if overwrite {
+		extractedTag, _ = original.GetString(tagName)
+	}
+
+	if !overwrite || len(extractedTag) == 0 {
+		(*fileMetadataSlice)[0].Fields[tagName] = newValue
+	}
+}
+
 // UpdateMetadata updates file exif data based on the JSON metadata.
 func UpdateMetadata(app *application.App, jsonPaths []string, mergeSettings MergeSettings) {
 	// Create a map to group JSON files and their corresponding files.
@@ -169,45 +180,56 @@ func UpdateMetadata(app *application.App, jsonPaths []string, mergeSettings Merg
 
 		// Prepare the fields for exif metadata for each corresponding file
 		for _, filePath := range filePaths {
+			var original exiftool.FileMetadata
+			if !mergeSettings.OverwriteExistingTags {
+				original := et.ExtractMetadata(filePath)[0]
+				if original.Err != nil {
+					LogWrapper(app, "ERROR", err.Error())
+					continue
+				}
+			}
 			fileMetadataSlice := []exiftool.FileMetadata{
 				{
 					File:   filePath,
 					Fields: map[string]interface{}{},
 				},
 			}
-			if mergeSettings.MergeTitle {
-				fileMetadataSlice[0].Fields["Title"] = title
+			tagUpdates := map[string]interface{}{
+				"Title":            title,
+				"ImageDescription": description,
+				"URL":              url,
 			}
-			if mergeSettings.MergeURL {
-				fileMetadataSlice[0].Fields["URL"] = url
+			for tagName, value := range tagUpdates {
+				if value != "" {
+					updateTag(tagName, value, original, &fileMetadataSlice, mergeSettings.OverwriteExistingTags)
+				}
 			}
-			if mergeSettings.MergeDateTaken {
+			if mergeSettings.ExifTags.DateTaken {
 				t := time.Unix(photoTakenTime, 0).UTC()
 				if latitude > 0 && longitude > 0 && mergeSettings.InferTimezoneFromGPS {
 					t, err = getTimeInTimezone(t, latitude, longitude)
 					if err != nil {
 						LogWrapper(app, "ERROR", err.Error())
+						continue
 					}
 				} else {
 					t = ApplyTimezoneOffset(t, mergeSettings.TimezoneOffset)
 				}
 				// Format the time as "YYYY:MM:DD HH:MM:SS"
 				formattedTime := t.Format("2006:01:02 15:04:05")
-				fileMetadataSlice[0].Fields["DateTimeOriginal"] = formattedTime
-			}
-			if mergeSettings.MergeDescription {
-				fileMetadataSlice[0].Fields["ImageDescription"] = description
+				updateTag("DateTimeOriginal", formattedTime, original, &fileMetadataSlice, mergeSettings.OverwriteExistingTags)
 			}
 
-			if mergeSettings.MergeGPS {
-				if latitude != 0 {
-					fileMetadataSlice[0].Fields["GPSLatitude"] = latitude
+			if mergeSettings.ExifTags.GPS {
+				gpsTags := map[string]float64{
+					"GPSLatitude":  latitude,
+					"GPSLongitude": longitude,
+					"GPSAltitude":  altitude,
 				}
-				if longitude != 0 {
-					fileMetadataSlice[0].Fields["GPSLongitude"] = longitude
-				}
-				if altitude != 0 {
-					fileMetadataSlice[0].Fields["GPSAltitude"] = altitude
+				for tagName, value := range gpsTags {
+					if value != 0 {
+						updateTag(tagName, value, original, &fileMetadataSlice, mergeSettings.OverwriteExistingTags)
+					}
 				}
 			}
 

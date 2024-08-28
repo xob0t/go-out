@@ -21,30 +21,6 @@ var GlobalSettings GlobalSettingsT
 var ConfigDir string = filepath.Join(GetUserDir(), "/.config/go-out")
 var ConfigPath string = filepath.Join(ConfigDir, "config.yaml")
 
-type MergeSettings struct {
-	IgnoreMinorErrors    bool   `json:"ignoreMinorErrors" koanf:"ignore_minor_errors"`
-	EditedSuffix         string `json:"editedSuffix" koanf:"edited_suffix"`
-	TimezoneOffset       string `json:"timezoneOffset" koanf:"timezone_offset"`
-	InferTimezoneFromGPS bool   `json:"inferTimezoneFromGPS" koanf:"defer_timezone_from_GPS"`
-	MergeTitle           bool   `json:"mergeTitle" koanf:"merge_title"`
-	MergeDescription     bool   `json:"mergeDescription" koanf:"merge_description"`
-	MergeDateTaken       bool   `json:"mergeDateTaken" koanf:"merge_date_taken"`
-	MergeURL             bool   `json:"mergeURL" koanf:"merge_URL"`
-	MergeGPS             bool   `json:"mergeGPS" koanf:"merge_GPS"`
-}
-
-type GlobalSettingsT struct {
-	MergeSettings MergeSettings `json:"mergeSettings" koanf:"merge_settings"`
-	Window        struct {
-		Saved       bool `json:"saved" koanf:"saved"`
-		IsMaximised bool `json:"isMaximised" koanf:"is_maximised"`
-		SizeW       int  `json:"sizeW" koanf:"size_w"`
-		SizeH       int  `json:"sizeH" koanf:"size_h"`
-		PosX        int  `json:"posX" koanf:"pos_x"`
-		PosY        int  `json:"posY" koanf:"pos_y"`
-	} `json:"window" koanf:"window"`
-}
-
 func RestoreSettings(app *application.App, window *application.WebviewWindow) {
 	ConfigDirExists := Exists(ConfigDir)
 	if !ConfigDirExists {
@@ -100,13 +76,13 @@ func MakeNewDefaultConfig() error {
 	GlobalSettings = GlobalSettingsT{}
 	GlobalSettings.MergeSettings.EditedSuffix = "edited"
 	GlobalSettings.MergeSettings.InferTimezoneFromGPS = true
-	GlobalSettings.MergeSettings.MergeTitle = true
-	GlobalSettings.MergeSettings.MergeDescription = true
-	GlobalSettings.MergeSettings.MergeDateTaken = true
-	GlobalSettings.MergeSettings.MergeURL = true
-	GlobalSettings.MergeSettings.MergeGPS = true
 	GlobalSettings.MergeSettings.TimezoneOffset = time.Now().Format("-0700")
-	fmt.Println(GlobalSettings)
+	GlobalSettings.MergeSettings.OverwriteExistingTags = true
+	GlobalSettings.MergeSettings.ExifTags.Title = true
+	GlobalSettings.MergeSettings.ExifTags.Description = true
+	GlobalSettings.MergeSettings.ExifTags.DateTaken = true
+	GlobalSettings.MergeSettings.ExifTags.URL = true
+	GlobalSettings.MergeSettings.ExifTags.GPS = true
 	err := SaveGlobalConfig()
 	if err != nil {
 		fmt.Println(err)

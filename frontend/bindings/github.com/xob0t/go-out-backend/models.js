@@ -6,12 +6,75 @@
 // @ts-ignore: Unused imports
 import {Create as $Create} from "@wailsio/runtime";
 
+export class ExifTags {
+    /**
+     * Creates a new ExifTags instance.
+     * @param {Partial<ExifTags>} [$$source = {}] - The source object to create the ExifTags.
+     */
+    constructor($$source = {}) {
+        if (!("title" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["title"] = false;
+        }
+        if (!("description" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["description"] = false;
+        }
+        if (!("dateTaken" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["dateTaken"] = false;
+        }
+        if (!("URL" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["URL"] = false;
+        }
+        if (!("GPS" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["GPS"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ExifTags instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {ExifTags}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ExifTags(/** @type {Partial<ExifTags>} */($$parsedSource));
+    }
+}
+
 export class MergeSettings {
     /**
      * Creates a new MergeSettings instance.
      * @param {Partial<MergeSettings>} [$$source = {}] - The source object to create the MergeSettings.
      */
     constructor($$source = {}) {
+        if (!("exifTags" in $$source)) {
+            /**
+             * @member
+             * @type {ExifTags}
+             */
+            this["exifTags"] = (new ExifTags());
+        }
         if (!("ignoreMinorErrors" in $$source)) {
             /**
              * @member
@@ -40,40 +103,12 @@ export class MergeSettings {
              */
             this["inferTimezoneFromGPS"] = false;
         }
-        if (!("mergeTitle" in $$source)) {
+        if (!("overwriteExistingTags" in $$source)) {
             /**
              * @member
              * @type {boolean}
              */
-            this["mergeTitle"] = false;
-        }
-        if (!("mergeDescription" in $$source)) {
-            /**
-             * @member
-             * @type {boolean}
-             */
-            this["mergeDescription"] = false;
-        }
-        if (!("mergeDateTaken" in $$source)) {
-            /**
-             * @member
-             * @type {boolean}
-             */
-            this["mergeDateTaken"] = false;
-        }
-        if (!("mergeURL" in $$source)) {
-            /**
-             * @member
-             * @type {boolean}
-             */
-            this["mergeURL"] = false;
-        }
-        if (!("mergeGPS" in $$source)) {
-            /**
-             * @member
-             * @type {boolean}
-             */
-            this["mergeGPS"] = false;
+            this["overwriteExistingTags"] = false;
         }
 
         Object.assign(this, $$source);
@@ -85,7 +120,14 @@ export class MergeSettings {
      * @returns {MergeSettings}
      */
     static createFrom($$source = {}) {
+        const $$createField0_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("exifTags" in $$parsedSource) {
+            $$parsedSource["exifTags"] = $$createField0_0($$parsedSource["exifTags"]);
+        }
         return new MergeSettings(/** @type {Partial<MergeSettings>} */($$parsedSource));
     }
 }
+
+// Private type creation functions
+const $$createType0 = ExifTags.createFrom;

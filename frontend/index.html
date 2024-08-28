@@ -8,19 +8,13 @@
   </head>
   <body>
     <div class="container">
-      <div class="card">
-        <div class="title" id="title">DROP UNZIPPED GOOGLE PHOTOS TAKEOUT FILES TO MERGE JSON METADATA INTO MEDIA</div>
-      </div>
-      <div class="settings-container">
-        <div>
+<h1>DROP UNZIPPED GOOGLE PHOTOS TAKEOUT FILES TO MERGE JSON METADATA INTO MEDIA</h1>
+      <div class="preferences-container">
+        <div class="settings">
           <h3>Settings</h3>
           <label>
             Edited Files Suffix
             <input type="text" id="editedSuffix" />
-          </label>
-          <label>
-            Ignore Minor Exiftool Write Errors
-            <input type="checkbox" id="ignoreMinorErrors" />
           </label>
           <label>
             Timezone Offset
@@ -30,28 +24,36 @@
             Infer Timezone From GPS Whenever Possible
             <input type="checkbox" id="inferTimezoneFromGPS" />
           </label>
+          <label>
+            Overwrite Existing Tags
+            <input type="checkbox" id="overwriteExistingTags" />
+          </label>
+          <label>
+            Ignore Minor Exiftool Write Errors
+            <input type="checkbox" id="ignoreMinorErrors" />
+          </label>
         </div>
-        <div>
+        <div class="tags">
           <h3>EXIF Tags</h3>
           <label>
             Title
-            <input type="checkbox" id="mergeTitle" />
+            <input type="checkbox" id="title" />
           </label>
           <label>
             Description 
-            <input type="checkbox" id="mergeDescription" />
+            <input type="checkbox" id="description" />
           </label>
           <label>
             Date Taken
-            <input type="checkbox" id="mergeDateTaken" />
+            <input type="checkbox" id="dateTaken" />
           </label>
           <label>
             URL
-            <input type="checkbox" id="mergeURL" />
+            <input type="checkbox" id="URL" />
           </label>
           <label>
             GPS
-            <input type="checkbox" id="mergeGPS" />
+            <input type="checkbox" id="GPS" />
           </label>
         </div>
       </div>

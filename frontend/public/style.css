@@ -96,9 +96,9 @@ button {
   color: #FFA500;
 }
 
-#title {
+h1 {
   margin-bottom: 30px;
-  font-size: 1.2em;
+  font-size: 1.3em;
   line-height: 1.1;
 }
 
@@ -109,7 +109,7 @@ button {
   justify-content: center;
 }
 
-.settings-container {
+.preferences-container {
   display: flex;
   gap: 40px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);

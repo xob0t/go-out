@@ -5,7 +5,9 @@ export function initializeSettings() {
     input.addEventListener("change", updateInputState);
   });
 
-  let settingsState = {};
+  let settingsState = {
+    exifTags: {}
+  };
 
   SettingsService.Get()
     .then((result) => {
@@ -18,7 +20,9 @@ export function initializeSettings() {
     });
 
   function initializeInputs(settingsState) {
-    for (let inputId in settingsState) {
+    // Initialize settings fields
+    const generalSettings = ["editedSuffix", "ignoreMinorErrors", "timezoneOffset", "inferTimezoneFromGPS", "overwriteExistingTags"];
+    generalSettings.forEach((inputId) => {
       const inputElement = document.getElementById(inputId);
       if (inputElement) {
         if (inputElement.type === "checkbox") {
@@ -27,15 +31,31 @@ export function initializeSettings() {
           inputElement.value = settingsState[inputId];
         }
       }
-    }
+    });
+
+    // Initialize ExifTags fields
+    const exifTags = ["title", "description", "dateTaken", "URL", "GPS"];
+    exifTags.forEach((inputId) => {
+      const inputElement = document.getElementById(inputId);
+      if (inputElement) {
+        inputElement.checked = settingsState.exifTags[inputId];
+      }
+    });
   }
 
   function updateInputState(event) {
     const inputId = event.target.id;
-    if (event.target.type === "checkbox") {
-      settingsState[inputId] = event.target.checked;
+
+    if (inputId in settingsState.exifTags) {
+      // Update ExifTags fields
+      settingsState.exifTags[inputId] = event.target.checked;
     } else {
-      settingsState[inputId] = event.target.value;
+      // Update general settings fields
+      if (event.target.type === "checkbox") {
+        settingsState[inputId] = event.target.checked;
+      } else {
+        settingsState[inputId] = event.target.value;
+      }
     }
 
     SettingsService.Update(settingsState)
