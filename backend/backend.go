@@ -14,6 +14,29 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
+func LogWrapper(app *application.App, level, message string) {
+	// logs to both the UI and the console
+	app.Events.Emit(&application.WailsEvent{
+		Name: "log",
+		Data: map[string]string{
+			"level":   level,
+			"message": message,
+		},
+	})
+	switch level {
+	case "INFO":
+		app.Logger.Info(message)
+	case "DEBUG":
+		app.Logger.Debug(message)
+	case "WARNING":
+		app.Logger.Warn(message)
+	case "ERROR":
+		app.Logger.Error(message)
+	default:
+		fmt.Println("Invalid level")
+	}
+}
+
 func GetAllJsonFiles(paths []string) ([]string, error) {
 	var jsons []string
 
@@ -120,15 +143,8 @@ func UpdateMetadata(app *application.App, jsonPaths []string, mergeSettings Merg
 	// Initialize exiftool with the specified configuration functions
 	et, err := exiftool.NewExiftool(configFuncs...)
 	if err != nil {
-		errMsg := "Error initializing Exiftool: " + err.Error()
-		app.Events.Emit(&application.WailsEvent{
-			Name: "log",
-			Data: map[string]string{
-				"level":   "ERROR",
-				"message": errMsg,
-			},
-		})
-		app.Logger.Error(errMsg)
+		logMsg := "Error initializing Exiftool: " + err.Error()
+		LogWrapper(app, "ERROR", logMsg)
 	}
 	defer et.Close()
 
@@ -137,15 +153,8 @@ func UpdateMetadata(app *application.App, jsonPaths []string, mergeSettings Merg
 		// Read the JSON file
 		data, err := os.ReadFile(jsonPath)
 		if err != nil {
-			errMsg := "Error reading JSON file " + jsonPath + " " + err.Error()
-			app.Events.Emit(&application.WailsEvent{
-				Name: "log",
-				Data: map[string]string{
-					"level":   "ERROR",
-					"message": errMsg,
-				},
-			})
-			app.Logger.Error(errMsg)
+			logMsg := "Error reading JSON file " + jsonPath + " " + err.Error()
+			LogWrapper(app, "ERROR", logMsg)
 			continue
 		}
 
@@ -177,7 +186,7 @@ func UpdateMetadata(app *application.App, jsonPaths []string, mergeSettings Merg
 				if latitude > 0 && longitude > 0 && mergeSettings.InferTimezoneFromGPS {
 					t, err = getTimeInTimezone(t, latitude, longitude)
 					if err != nil {
-						app.Logger.Error(err.Error())
+						LogWrapper(app, "ERROR", err.Error())
 					}
 				} else {
 					t = ApplyTimezoneOffset(t, mergeSettings.TimezoneOffset)
@@ -202,32 +211,23 @@ func UpdateMetadata(app *application.App, jsonPaths []string, mergeSettings Merg
 				}
 			}
 
+			{
+				logMsg := fmt.Sprint("Writing metadata: ", fileMetadataSlice[0].Fields)
+				LogWrapper(app, "INfO", logMsg)
+			}
+
 			// Write the metadata to the file
 			et.WriteMetadata(fileMetadataSlice)
 
 			// Check if there were any errors
 			if fileMetadataSlice[0].Err != nil {
-				errMsg := "Error writing data to file " + filePath + ": " + fileMetadataSlice[0].Err.Error()
-				app.Events.Emit(&application.WailsEvent{
-					Name: "log",
-					Data: map[string]string{
-						"level":   "ERROR",
-						"message": errMsg,
-					},
-				})
-				app.Logger.Error(errMsg)
+				logMsg := "Error writing data to file " + filePath + ": " + fileMetadataSlice[0].Err.Error()
+				LogWrapper(app, "ERROR", logMsg)
 				continue
 			}
 
 			logMsg := "Successfully updated EXIF data for file: " + filePath
-			app.Events.Emit(&application.WailsEvent{
-				Name: "log",
-				Data: map[string]string{
-					"level":   "INFO",
-					"message": logMsg,
-				},
-			})
-			app.Logger.Info(logMsg)
+			LogWrapper(app, "INFO", logMsg)
 		}
 	}
 }

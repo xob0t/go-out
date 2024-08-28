@@ -92,6 +92,10 @@ button {
   color: red;
 }
 
+.log-entry.WARNING {
+  color: #FFA500;
+}
+
 #title {
   margin-bottom: 30px;
   font-size: 1.2em;

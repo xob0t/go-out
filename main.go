@@ -87,45 +87,27 @@ func main() {
 
 	window.On(events.Common.WindowFilesDropped, func(event *application.WindowEvent) {
 		files := event.Context().DroppedFiles()
-		app.Events.Emit(&application.WailsEvent{
-			Name: "files",
-			Data: files,
-		})
-		app.Logger.Info("Files Dropped!", "files", files)
+		{
+			logMsg := fmt.Sprint("Files Dropped!", "files", files)
+			backend.LogWrapper(app, "DEBUG", logMsg)
+		}
 		jsonFiles, err := backend.GetAllJsonFiles(files)
 		if err != nil {
-			errMsg := "Failed to scan input path(s)"
-			app.Logger.Warn(errMsg)
-			app.Events.Emit(&application.WailsEvent{
-				Name: "log",
-				Data: map[string]string{
-					"level":   "error",
-					"message": errMsg,
-				},
-			})
+			logMsg := "Failed to scan input path(s)"
+			backend.LogWrapper(app, "ERROR", logMsg)
 			return
 		}
 		if len(jsonFiles) == 0 {
-			app.Logger.Info("No JSONs found")
-			app.Events.Emit(&application.WailsEvent{
-				Name: "log",
-				Data: map[string]string{
-					"level":   "INFO",
-					"message": "No JSONs found",
-				},
-			})
+			logMsg := "No JSONs found"
+			backend.LogWrapper(app, "WARNING", logMsg)
 			return
 		}
 		app.Logger.Info("JSONs found!", "jsons", jsonFiles)
 		backend.UpdateMetadata(app, jsonFiles, backend.GlobalSettings.MergeSettings)
-		logMsg := "The process is complete, click this log to expand it"
-		app.Events.Emit(&application.WailsEvent{
-			Name: "log",
-			Data: map[string]string{
-				"level":   "INFO",
-				"message": logMsg,
-			},
-		})
+		{
+			logMsg := "The process is complete, click this log to expand it"
+			backend.LogWrapper(app, "INFO", logMsg)
+		}
 
 	})
 
