@@ -7,61 +7,70 @@
     <title>go-out</title>
   </head>
   <body>
-    <div class="container">
-<h1>DROP UNZIPPED GOOGLE PHOTOS TAKEOUT FILES TO MERGE JSON METADATA INTO MEDIA</h1>
-      <div class="preferences-container">
-        <div class="settings">
-          <h3>Settings</h3>
-          <label>
-            Edited Files Suffix
-            <input type="text" id="editedSuffix" />
-          </label>
-          <label>
-            Timezone Offset
-            <input type="text" id="timezoneOffset" />
-          </label>
-          <label>
-            Infer Timezone From GPS Whenever Possible
-            <input type="checkbox" id="inferTimezoneFromGPS" />
-          </label>
-          <label>
-            Overwrite Existing Tags
-            <input type="checkbox" id="overwriteExistingTags" />
-          </label>
-          <label>
-            Ignore Minor Exiftool Write Errors
-            <input type="checkbox" id="ignoreMinorErrors" />
-          </label>
-        </div>
-        <div class="tags">
-          <h3>EXIF Tags</h3>
-          <label>
-            Title
-            <input type="checkbox" id="title" />
-          </label>
-          <label>
-            Description 
-            <input type="checkbox" id="description" />
-          </label>
-          <label>
-            Date Taken
-            <input type="checkbox" id="dateTaken" />
-          </label>
-          <label>
-            URL
-            <input type="checkbox" id="URL" />
-          </label>
-          <label>
-            GPS
-            <input type="checkbox" id="GPS" />
-          </label>
-        </div>
+    <div id="warning-overlay">
+      <div id="warning-content">
+        <h1>EXIFTOOL NOT FOUND</h1>
+        <div>Click to open exiftool.org</div>
+        <div>Add it to PATH, or place exiftool.exe next to go-out and restart the app</div>
       </div>
-      <div id="logContainer">
-        <button id="toggleLogVisibility">Hide Log</button>
-        <button id="clearLog">Clear Log</button>
-        <button id="copyLog">Copy Log</button>
-        <div id="logArea"></div>
+    </div>
+    <div id="app-main">
+      <div class="container">
+        <h1>DROP UNZIPPED GOOGLE PHOTOS TAKEOUT FILES TO MERGE JSON METADATA INTO MEDIA</h1>
+        <div class="preferences-container">
+          <div class="settings">
+            <h3>Settings</h3>
+            <label>
+              Edited Files Suffix
+              <input type="text" id="editedSuffix" />
+            </label>
+            <label>
+              Timezone Offset
+              <input type="text" id="timezoneOffset" />
+            </label>
+            <label>
+              Infer Timezone From GPS Whenever Possible
+              <input type="checkbox" id="inferTimezoneFromGPS" />
+            </label>
+            <label>
+              Overwrite Existing Tags
+              <input type="checkbox" id="overwriteExistingTags" />
+            </label>
+            <label>
+              Ignore Minor Exiftool Write Errors
+              <input type="checkbox" id="ignoreMinorErrors" />
+            </label>
+          </div>
+          <div class="tags">
+            <h3>EXIF Tags</h3>
+            <label>
+              Title
+              <input type="checkbox" id="title" />
+            </label>
+            <label>
+              Description
+              <input type="checkbox" id="description" />
+            </label>
+            <label>
+              Date Taken
+              <input type="checkbox" id="dateTaken" />
+            </label>
+            <label>
+              URL
+              <input type="checkbox" id="URL" />
+            </label>
+            <label>
+              GPS
+              <input type="checkbox" id="GPS" />
+            </label>
+          </div>
+        </div>
+        <div id="logContainer">
+          <button id="toggleLogVisibility">Hide Log</button>
+          <button id="clearLog">Clear Log</button>
+          <button id="copyLog">Copy Log</button>
+          <div id="logArea"></div>
+        </div>
       </div>
     </div>
     <script type="module" src="/main.js"></script>

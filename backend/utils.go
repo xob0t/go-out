@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -20,6 +21,20 @@ import (
 var GlobalSettings GlobalSettingsT
 var ConfigDir string = filepath.Join(GetUserDir(), "/.config/go-out")
 var ConfigPath string = filepath.Join(ConfigDir, "config.yaml")
+
+func ExiftoolCheck(app *application.App) bool {
+	_, err := exec.LookPath("exiftool")
+	if err != nil {
+		app.Logger.Warn("Exiftool not found")
+		app.Events.Emit(&application.WailsEvent{
+			Name: "exiftoolStatus",
+			Data: false,
+		})
+		return false
+	}
+	app.Logger.Info("Exiftool found")
+	return true
+}
 
 func RestoreSettings(app *application.App, window *application.WebviewWindow) {
 	ConfigDirExists := Exists(ConfigDir)

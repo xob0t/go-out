@@ -69,6 +69,7 @@ func main() {
 	window.RegisterHook(events.Common.WindowRuntimeReady, func(e *application.WindowEvent) {
 		app.Logger.Info("WindowRuntimeReady")
 		backend.RestoreSettings(app, window)
+		backend.ExiftoolCheck(app)
 	})
 
 	app.Events.On("mergeSettingsChanged", func(e *application.WailsEvent) {
@@ -86,6 +87,11 @@ func main() {
 	})
 
 	window.On(events.Common.WindowFilesDropped, func(event *application.WindowEvent) {
+		exiftoolStatus := backend.ExiftoolCheck(app)
+		if !exiftoolStatus {
+			app.Logger.Warn("exiftool not found, aborting the job")
+			return
+		}
 		files := event.Context().DroppedFiles()
 		{
 			logMsg := fmt.Sprint("Files Dropped!", "files", files)

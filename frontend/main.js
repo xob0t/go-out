@@ -1,5 +1,7 @@
-import {initializeSettings} from "./settings"
-import {initializeLogArea} from "./logArea"
+import { initializeSettings } from "./settings";
+import { initializeLogArea } from "./logArea";
+import { exiftoolStatusHandler } from "./exiftoolStatusHandler";
 
-initializeSettings()
-initializeLogArea()
+exiftoolStatusHandler();
+initializeSettings();
+initializeLogArea();

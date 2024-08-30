@@ -93,7 +93,7 @@ button {
 }
 
 .log-entry.WARNING {
-  color: #FFA500;
+  color: #ffa500;
 }
 
 h1 {
@@ -144,4 +144,21 @@ input[type="text"] {
 input[type="checkbox"] {
   width: 1.2rem;
   height: 1.2rem;
+}
+
+#warning-overlay {
+  display: none;
+  gap: 50px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+#warning-content {
+  cursor: pointer;
+  text-align: center;
 }
